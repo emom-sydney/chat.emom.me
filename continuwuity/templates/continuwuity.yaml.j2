@@ -1,0 +1,11 @@
+homeserver:
+  url: "{{ synapse_client_api }}"
+  user_id: "{{ continuwuity_user }}"
+  access_token: "{{ continuwuity_access_token }}"
+
+logging:
+  level: INFO
+
+model:
+  provider: "local"
+  path: "/var/lib/continuwuity/model"   # adjust if needed

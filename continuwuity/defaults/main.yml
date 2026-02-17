@@ -1,0 +1,16 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for continuwuity
+
+continuwuity_package: continuwuity
+
+# Where Synapse is listening
+synapse_client_api: "http://127.0.0.1:8008"
+
+# Bot user details
+continuwuity_user: "@continuwuity:{{ matrix_domain }}"
+continuwuity_password: "obliterate-spasm-dependable"
+
+continuwuity_listen_port: 8080
+continuwuity_service_name: "conduwuit"
+matrix_registration_shared_secret: "obloid_dissonance_vertigo"

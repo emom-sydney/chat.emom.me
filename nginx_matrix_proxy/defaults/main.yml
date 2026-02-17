@@ -1,0 +1,18 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for nginx_matrix_proxy
+
+# Synapse local port
+synapse_port: 8008
+
+# Continuwuity local port
+continuwuity_port: 8080
+
+nginx_sites_available: "/etc/nginx/sites-available"
+nginx_sites_enabled: "/etc/nginx/sites-enabled"
+
+nginx_matrix_conf: "{{ nginx_sites_available }}/{{ matrix_domain }}"
+
+# Certbot settings
+certbot_email: "admin@emom.me"
+certbot_webroot: "/var/www/html/letsencrypt"

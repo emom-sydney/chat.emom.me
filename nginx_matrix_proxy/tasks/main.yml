@@ -1,0 +1,105 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for nginx_matrix_proxy
+
+- name: Ensure Nginx is installed
+  ansible.builtin.package:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Ensure Certbot is installed
+  ansible.builtin.package:
+    name: certbot
+    state: present
+
+- name: Ensure certbot webroot directory exists
+  ansible.builtin.file:
+    path: "{{ certbot_webroot }}"
+    state: directory
+    mode: '0755'
+    owner: www-data
+    group: www-data
+
+- name: Check if certificate already exists
+  stat:
+    path: "/etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem"
+  register: cert_exists
+
+# --- Temporary HTTP-only config for ACME challenge ---
+
+- name: Deploy temporary ACME challenge config
+  ansible.builtin.copy:
+    dest: "{{ nginx_matrix_conf }}"
+    mode: '0644'
+    content: |
+      server {
+          listen 80;
+          server_name {{ matrix_domain }};
+
+          location /.well-known/acme-challenge/ {
+              root {{ certbot_webroot }};
+          }
+      }
+  when: not cert_exists.stat.exists
+  notify: Reload Nginx
+
+- name: Enable temporary site
+  ansible.builtin.file:
+    src: "{{ nginx_matrix_conf }}"
+    dest: "{{ nginx_sites_enabled }}/{{ matrix_domain }}"
+    state: link
+  when: not cert_exists.stat.exists
+  notify: Reload Nginx
+
+- name: Wait for Nginx to reload
+  ansible.builtin.pause:
+    seconds: 4
+  when: not cert_exists.stat.exists
+
+- name: Request Let's Encrypt certificate
+  ansible.builtin.command: >
+    certbot certonly --webroot
+    -w {{ certbot_webroot }}
+    -d {{ matrix_domain }}
+    --email {{ certbot_email }}
+    --agree-tos
+    --non-interactive
+  when: not cert_exists.stat.exists
+  register: certbot_result
+  changed_when: "'Successfully received certificate' in certbot_result.stdout"
+
+- name: Check if nftables is installed
+  ansible.builtin.stat:
+    path: /usr/sbin/nft
+  register: nft_check
+
+- name: Allow HTTP (80/tcp) in nftables
+  ansible.builtin.command: >
+    nft add rule inet filter input tcp dport 80 accept
+  when: nft_check.stat.exists
+  register: nft_http
+  changed_when: "'added' in nft_http.stderr or 'add' in nft_http.stderr"
+  failed_when: false
+
+- name: Allow HTTPS (443/tcp) in nftables
+  ansible.builtin.command: >
+    nft add rule inet filter input tcp dport 443 accept
+  when: nft_check.stat.exists
+  register: nft_https
+  changed_when: "'added' in nft_https.stderr or 'add' in nft_https.stderr"
+  failed_when: false
+
+- name: Deploy final Nginx config for Matrix + Continuwuity
+  ansible.builtin.template:
+    src: chat.emom.me.conf.j2
+    dest: "{{ nginx_matrix_conf }}"
+    mode: '0644'
+  notify: Reload Nginx
+
+- name: Ensure site is enabled
+  ansible.builtin.file:
+    src: "{{ nginx_matrix_conf }}"
+    dest: "{{ nginx_sites_enabled }}/{{ matrix_domain }}"
+    state: link
+  notify: Reload Nginx
