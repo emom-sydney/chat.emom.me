@@ -1,8 +1,11 @@
 - hosts: localhost
   become: true
   vars:
-    matrix_domain: "chat.emom.me"
+    matrix_domain: "emom.me"
+    matrix_server_hostname: "matrix.emom.me"
+    matrix_admin_email: "admin@sydney.emom.me"
+    continuwuity_socket_path: "/run/continuwuity/continuwuity.sock"
+    continuwuity_new_user_displayname_suffix: "🎹"
   roles:
-    - matrix_synapse
-    - continuwuity
     - nginx_matrix_proxy
+    - continuwuity

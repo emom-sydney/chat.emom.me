@@ -1,0 +1,22 @@
+- name: Register Continuwuity bot user with Synapse
+  command: >
+    register_new_matrix_user
+    --user {{ continuwuity_user.split(':')[0] | regex_replace('^@', '') }}
+    --password {{ continuwuity_password }}
+    --no-admin
+    -k {{ matrix_registration_token }}
+    {{ synapse_client_api }}
+  register: register_output
+  changed_when: "'Success' in register_output.stdout"
+  failed_when: false
+
+- name: Extract access token for Continuwuity bot
+  command: >
+    curl -s -XPOST -d '{"type":"m.login.password","user":"{{ continuwuity_user.split(':')[0] | regex_replace('^@', '') }}","password":"{{ continuwuity_password }}"}'
+    {{ synapse_client_api }}/_matrix/client/r0/login
+  register: login_output
+  changed_when: false
+
+- name: Parse access token
+  set_fact:
+    continuwuity_access_token: "{{ (login_output.stdout | from_json).access_token }}"

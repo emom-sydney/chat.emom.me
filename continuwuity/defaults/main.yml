@@ -13,4 +13,7 @@ continuwuity_password: "obliterate-spasm-dependable"
 
 continuwuity_listen_port: 8080
 continuwuity_service_name: "conduwuit"
-matrix_registration_shared_secret: "obloid_dissonance_vertigo"
+matrix_registration_token: "obloid_dissonance_vertigo"
+matrix_federation_enabled: "false"
+
+continuwuity_new_user_displayname_suffix: "🏳️‍⚧️"

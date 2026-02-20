@@ -1,0 +1,12 @@
+upstream continuwuity_server {
+    server unix:{{ continuwuity_socket_path }} max_fails=0;
+
+    # TCP alternative if needed
+    #server 127.0.0.1:6167 max_fails=0;
+
+    # Connection pooling
+    keepalive 32;
+    keepalive_requests 1000;
+    keepalive_time 1h;
+    keepalive_timeout 600s;
+}

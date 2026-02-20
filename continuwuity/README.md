@@ -1,7 +1,7 @@
-Role Name
+Continuwuity
 =========
 
-A brief description of the role goes here.
+Role to install Continuwuity, a Matrix server.
 
 Requirements
 ------------

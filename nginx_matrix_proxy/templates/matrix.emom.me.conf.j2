@@ -1,0 +1,48 @@
+# Matrix homeserver
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    listen 8448 ssl;
+    listen [::]:8448 ssl;
+    http2 on;
+    server_name matrix.{{ matrix_domain }};
+
+    # TLS Configuration
+    ssl_certificate /etc/letsencrypt/live/{{ matrix_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem;
+    # include includes/common.conf;
+
+    # Logging (Adjust paths as needed)
+    access_log /var/log/nginx/continuwuity-access.log;
+    error_log /var/log/nginx/continuwuity-error.log;
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Disable buffering for immediate data transfer
+    proxy_buffering off;
+
+    # Compression for JSON responses
+    gzip on;
+    gzip_types application/json;
+    gzip_min_length 1000;
+
+    # Matrix API endpoints
+    location /_matrix/ {
+        # Proxy settings
+        proxy_pass http://continuwuity_server;
+
+        # Proxy Settings
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Proxy timeouts
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+}

@@ -1,7 +1,7 @@
-Role Name
+NGINX-MATRIX-PROXY
 =========
 
-A brief description of the role goes here.
+This sets up nginx to reverse-proxy a matrix/continuwuity server
 
 Requirements
 ------------

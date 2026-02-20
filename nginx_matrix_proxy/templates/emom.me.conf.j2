@@ -1,0 +1,50 @@
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name {{ matrix_domain }};
+
+     # TLS Configuration (assumes wildcard cert for *.emom.me)
+    ssl_certificate /etc/letsencrypt/live/{{ matrix_domain}}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ matrix_domain}}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Logging (optional)
+    access_log /var/log/nginx/continuwuity-access.log;
+    error_log /var/log/nginx/continuwuity-error.log;
+
+    # Matrix Server well-known
+    location /.well-known/matrix/server {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin "*";
+        return 200 '{"m.server": "{{ matrix_server_hostname }}:443"}';
+    }
+
+    # Matrix Client well-known (with sliding sync support)
+    location /.well-known/matrix/client {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin "*";
+        return 200 '{"m.homeserver": {"base_url": "https://{{ matrix_server_hostname }}"}, "org.matrix.msc3575.proxy": {"url": "https://{{ matrix_domain }}"}}';
+    }
+
+    # Matrix Support contact information (MSC1929)
+    location /.well-known/matrix/support {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin "*";
+        return 200 '{"contacts": [{"matrix_id": "@admin:{{ matrix_domain }}", "email_address": "{{ matrix_admin_email }}", "role": "m.role.admin"}]}';
+    }
+
+    # Optional: Return 404 for other URLs
+    location / {
+        return 404 "Not Found";
+    }
+}
+
+
+# Redirect HTTP → HTTPS
+server {
+    listen 80;
+    server_name {{ matrix_domain }};
+    return 301 https://$host$request_uri;
+}
